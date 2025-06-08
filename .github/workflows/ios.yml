@@ -25,7 +25,7 @@ jobs:
         dotnet-version: '8.0.x'  # 或8.x/9.x 等你所用版本
 
     - name: Install MAUI workloads
-      run: dotnet workload install maui
+      run: dotnet workload install ios maui --from-rollback-file https://maui.blob.core.windows.net/metadata/rollbacks/8.0.61.json --source https://api.nuget.org/v3/index.json
 
     - name: Import P12 Certificate
       run: |
