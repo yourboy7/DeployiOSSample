@@ -59,6 +59,7 @@ jobs:
           -f net8.0-ios \
           /p:ArchiveOnBuild=true \
           /p:EnableAssemblyILStripping=false \
+          /p:MtouchUseLlvm=false \
           /p:ProvisioningType=manual \
           /p:CodesignKey="Apple Distribution: jie li (XS8Q7C9R8Y)" \
           /p:CodesignProvision="DeployiOSSample"
