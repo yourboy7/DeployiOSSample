@@ -1,0 +1,71 @@
+name: Build & Publish iOS .NET MAUI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ios:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'  # 或8.x/9.x 等你所用版本
+
+    - name: Install MAUI workloads
+      run: dotnet workload install maui ios
+
+    - name: Import P12 Certificate
+      run: |
+        echo "${{ secrets.P12_CERT }}" | base64 --decode > cert.p12
+        security create-keychain -p "" build.keychain
+        security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+        security list-keychains -s build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+
+    - name: Download provisioning profiles
+      uses: Apple-Actions/download-provisioning-profiles@v1
+      with:
+        bundle-id: 'com.freedom.rain'
+        issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+        api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+    - name: Restore dependencies
+      run: dotnet restore ./src/Rain/Rain/Rain.csproj
+
+    - name: 🔧 Manually create empty ResourceRules.plist
+      run: |
+        mkdir -p ./src/Rain/Rain/bin/Release/net8.0-ios/ios-arm64/Rain.app/
+        echo '{}' > ./src/Rain/Rain/bin/Release/net8.0-ios/ios-arm64/Rain.app/ResourceRules.plist
+
+    - name: Build & Archive iOS app
+      run: |
+        dotnet publish ./src/Rain/Rain/Rain.csproj \
+          -c Release \
+          -f net8.0-ios \
+          /p:ArchiveOnBuild=true \
+          /p:EnableAssemblyILStripping=false \
+          /p:EnableResourceRules=false \
+          /p:ProvisioningType=manual \
+          /p:CodesignKey="Apple Distribution: jie li (XS8Q7C9R8Y)" \
+          /p:CodesignProvision="DeployiOSSample"
+
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-ipa
+        path: '**/*.ipa'
+
+    - name: Upload to TestFlight
+      uses: apple-actions/upload-testflight-build@v1
+      with:
+        ipa-path: '**/*.ipa'
+        issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+        api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
