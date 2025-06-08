@@ -31,22 +31,22 @@ jobs:
     - name: Download provisioning profiles
       uses: Apple-Actions/download-provisioning-profiles@v1
       with:
-        bundle-id: 'com.freedom.rain'
+        bundle-id: 'com.freedom.DeployiOSSample'
         issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
         api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
 
     - name: Restore dependencies
-      run: dotnet restore ./src/Rain/Rain/Rain.csproj
+      run: dotnet restore ./src/DeployiOSSample/DeployiOSSample/DeployiOSSample.csproj
 
     - name: 🔧 Manually create empty ResourceRules.plist
       run: |
-        mkdir -p ./src/Rain/Rain/bin/Release/net8.0-ios/ios-arm64/Rain.app/
-        echo '{}' > ./src/Rain/Rain/bin/Release/net8.0-ios/ios-arm64/Rain.app/ResourceRules.plist
+        mkdir -p ./src/DeployiOSSample/DeployiOSSample/bin/Release/net8.0-ios/ios-arm64/DeployiOSSample.app/
+        echo '{}' > ./src/DeployiOSSample/DeployiOSSample/bin/Release/net8.0-ios/ios-arm64/DeployiOSSample.app/ResourceRules.plist
 
     - name: Build & Archive iOS app
       run: |
-        dotnet publish ./src/Rain/Rain/Rain.csproj \
+        dotnet publish ./src/DeployiOSSample/DeployiOSSample/DeployiOSSample.csproj \
           -c Release \
           -f net8.0-ios \
           /p:ArchiveOnBuild=true \
